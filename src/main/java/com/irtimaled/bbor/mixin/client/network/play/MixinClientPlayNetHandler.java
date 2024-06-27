@@ -36,7 +36,7 @@ public class MixinClientPlayNetHandler {
 //        CommonInterop.loadWorldStructures(this.world);
 //    }
 
-    @Inject(method = "onGameJoin", at = @At("RETURN"))
+    @Inject(method = "onGameJoin", at = @At("HEAD"))
     private void onGameJoin(CallbackInfo ci) {
         EventBus.publish(new GameJoin());
     }
