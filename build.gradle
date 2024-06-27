@@ -87,6 +87,10 @@ jar {
 }
 
 afterEvaluate {
+    remapJar.archiveClassifier = 'fabric'
+}
+
+afterEvaluate {
     migrateMappings.configure {
         outputDir = project.file("src/main/java")
     }
