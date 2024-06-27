@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 public class WorldSaveRow extends ControlListEntry implements Comparable<WorldSaveRow> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat();
-    private static final Identifier ICON_MISSING = new Identifier("textures/misc/unknown_server.png");
+    private static final Identifier ICON_MISSING = Identifier.ofVanilla("textures/misc/unknown_server.png");
     private static final int ICON_SIZE = 20;
     private final MinecraftClient client;
     private final LevelSummary worldSummary;
@@ -48,7 +48,7 @@ public class WorldSaveRow extends ControlListEntry implements Comparable<WorldSa
         this.saveLoader = saveLoader;
         this.setSelectedEntry = setSelectedEntry;
         this.client = MinecraftClient.getInstance();
-        this.iconLocation = new Identifier("worlds/" + Hashing.sha1().hashUnencodedChars(worldSummary.getName()) + "/icon");
+        this.iconLocation = Identifier.ofVanilla("worlds/" + Hashing.sha1().hashUnencodedChars(worldSummary.getName()) + "/icon");
         this.iconFile = worldSummary.getIconPath().toFile();
         if (!this.iconFile.isFile()) {
             this.iconFile = null;

@@ -19,7 +19,6 @@ public class MixinServerCommonNetworkHandler {
     private void onCustomPayload(CustomPayloadC2SPacket packet, CallbackInfo ci) {
         if (((Object) this) instanceof ServerPlayNetworkHandler handler) {
             if (packet.payload() instanceof BBORCustomPayload payload) {
-                PayloadReader reader = new PayloadReader(payload);
                 switch (payload.id().toString()) {
                     case SubscribeToServer.NAME -> {
                         CommonInterop.playerSubscribed(handler.player);

@@ -14,8 +14,8 @@ public class WorldLoaded {
         WorldProperties info = world.getLevelProperties();
         this.dimensionId = DimensionId.from(world.getRegistryKey());
         this.seed = world.getSeed();
-        this.spawnX = info.getSpawnX();
-        this.spawnZ = info.getSpawnZ();
+        this.spawnX = info.getSpawnPos().getX();
+        this.spawnZ = info.getSpawnPos().getZ();
     }
 
     public DimensionId getDimensionId() {

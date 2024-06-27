@@ -1,6 +1,7 @@
 package com.irtimaled.bbor.client.renderers;
 
 import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.BufferRenderer;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
@@ -29,7 +30,7 @@ public class Renderer {
     }
 
     private static final Tessellator tessellator = Tessellator.getInstance();
-    private static final BufferBuilder bufferBuilder = tessellator.getBuffer();
+    private static BufferBuilder bufferBuilder = null;
 
     private int red;
     private int green;
@@ -38,7 +39,7 @@ public class Renderer {
     private MatrixStack matrixStack;
 
     private Renderer(VertexFormat.DrawMode glMode, VertexFormat vertexFormat) {
-        bufferBuilder.begin(glMode, vertexFormat);
+        bufferBuilder = tessellator.begin(glMode, vertexFormat);
         this.glMode = glMode;
     }
 
@@ -98,7 +99,7 @@ public class Renderer {
         if (glMode == VertexFormat.DrawMode.QUADS) {
 //            bufferBuilder.sortFrom((float) Camera.getX(), (float) Camera.getY(), (float) Camera.getZ()); // TODO
         }
-        tessellator.draw();
+        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
         matrixStack.pop();
     }
 
@@ -115,6 +116,6 @@ public class Renderer {
     }
 
     private void end() {
-        bufferBuilder.next();
+        // bufferBuilder.next();
     }
 }

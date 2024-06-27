@@ -11,7 +11,7 @@ public record BBORCustomPayload(PacketByteBuf byteBuf, Identifier id) implements
     }
 
     @Override
-    public void write(PacketByteBuf buf) {
-        buf.writeBytes(byteBuf);
+    public Id<? extends CustomPayload> getId() {
+        return new Id<BBORCustomPayload>(id);
     }
 }

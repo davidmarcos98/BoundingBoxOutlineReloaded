@@ -8,16 +8,11 @@ buildscript {
         }
     }
     dependencies {
-        classpath "net.fabricmc:fabric-loom:1.1-SNAPSHOT"
+        classpath "net.fabricmc:fabric-loom:1.7-SNAPSHOT"
     }
 }
 
-plugins {
-    id 'io.github.juuxel.loom-vineflower' version '1.+' apply false
-}
-
 apply plugin: 'fabric-loom'
-apply plugin: 'io.github.juuxel.loom-vineflower'
 apply plugin: 'java'
 apply plugin: 'idea'
 
@@ -25,8 +20,8 @@ group 'com.irtimaled'
 version project.buildVersion + '-' + project.minecraft_version
 archivesBaseName = 'BBOutlineReloaded'
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
+sourceCompatibility = JavaVersion.VERSION_21
+targetCompatibility = JavaVersion.VERSION_21
 
 tasks.withType(JavaCompile).configureEach {
     // ensure that the encoding is set to UTF-8, no matter what the system default is
@@ -35,7 +30,7 @@ tasks.withType(JavaCompile).configureEach {
     // If Javadoc is generated, this must be specified in that task too.
     it.options.encoding = "UTF-8"
 
-    it.options.release = 17
+    it.options.release = 21
 }
 
 repositories {
@@ -71,7 +66,7 @@ processResources {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
     withSourcesJar()
 }
@@ -89,10 +84,6 @@ jar {
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
-}
-
-afterEvaluate {
-    remapJar.classifier = 'fabric'
 }
 
 afterEvaluate {

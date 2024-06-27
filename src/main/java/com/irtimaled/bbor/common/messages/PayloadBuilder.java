@@ -18,11 +18,11 @@ public class PayloadBuilder {
     private static final Map<String, Identifier> packetNames = new ConcurrentHashMap<>();
 
     public static PayloadBuilder clientBound(String name) {
-        return new PayloadBuilder(packetNames.computeIfAbsent(name, Identifier::new), ((identifier, byteBuf) -> new CustomPayloadS2CPacket(new BBORCustomPayload(identifier, byteBuf))));
+        return new PayloadBuilder(packetNames.computeIfAbsent(name, Identifier::tryParse), ((identifier, byteBuf) -> new CustomPayloadS2CPacket(new BBORCustomPayload(byteBuf, identifier))));
     }
 
     public static PayloadBuilder serverBound(String name) {
-        return new PayloadBuilder(packetNames.computeIfAbsent(name, Identifier::new), ((identifier, byteBuf) -> new CustomPayloadC2SPacket(new BBORCustomPayload(identifier, byteBuf))));
+        return new PayloadBuilder(packetNames.computeIfAbsent(name, Identifier::tryParse), ((identifier, byteBuf) -> new CustomPayloadC2SPacket(new BBORCustomPayload(byteBuf, identifier))));
     }
 
     private final Identifier name;

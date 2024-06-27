@@ -36,7 +36,7 @@ import java.util.Set;
 
 public class ServuxStructurePackets {
 
-    public static final Identifier CHANNEL = new Identifier("servux:structures");
+    public static final Identifier CHANNEL = Identifier.tryParse("servux:structures");
 
     public static final int PROTOCOL_VERSION = 1;
     public static final int PACKET_S2C_METADATA = 1;

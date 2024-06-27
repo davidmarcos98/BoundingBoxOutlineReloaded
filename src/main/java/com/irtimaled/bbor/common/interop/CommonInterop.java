@@ -52,7 +52,7 @@ public class CommonInterop {
             final Optional<RegistryKey<Structure>> optional = structureFeatureRegistry.getKey(es.getKey());
             optional.ifPresent(key -> structures.put(key.getValue().toString(), es.getValue()));
         }
-        if (structures.size() > 0) EventBus.publish(new StructuresLoaded(structures, dimensionId));
+        if (!structures.isEmpty()) EventBus.publish(new StructuresLoaded(structures, dimensionId));
     }
 
     public static void loadWorlds(Collection<ServerWorld> worlds) {

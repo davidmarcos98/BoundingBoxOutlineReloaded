@@ -38,7 +38,6 @@ public class SettingsScreen extends ListScreen {
     protected ControlList buildList(int top, int bottom) {
         String version = SharedConstants.getGameVersion().getName();
         ControlList controlList = new ControlList(this.width, this.height, top, bottom);
-        if (this.client.world != null) controlList.setTransparentBackground();
 
         controlList
                 .section(null,

@@ -78,8 +78,8 @@ public class SpawnableBlocksHelper {
             });
             final Identifier id = biomeRegistryEntry.getKey().get().getValue();
             return spawnBlockState.allowsSpawning(world, pos.down(), isNether ? EntityType.ZOMBIFIED_PIGLIN : EntityType.ZOMBIE) &&
-                    (id == null || !id.equals(new Identifier("minecraft", "mushroom_fields")) &&
-                            !id.equals(new Identifier("minecraft", "deep_dark")));
+                    (id == null || !id.equals(Identifier.ofVanilla("mushroom_fields")) &&
+                            !id.equals(Identifier.ofVanilla("deep_dark")));
         }
         return false;
     }

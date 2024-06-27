@@ -5,13 +5,17 @@ import com.irtimaled.bbor.client.models.Point;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.BuiltBuffer;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.util.BufferAllocator;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Box;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -20,9 +24,13 @@ import java.util.concurrent.Executor;
  */
 public class RenderingContext {
 
-    private final BufferBuilder quadBufferBuilderNonMasked = new BufferBuilder(2097152);
-    private final BufferBuilder quadBufferBuilderMasked = new BufferBuilder(2097152);
-    private final BufferBuilder lineBufferBuilder = new BufferBuilder(2097152);
+    private final BufferAllocator quadBuffAllocatorNonMasked = new BufferAllocator(2097152);
+    private final BufferAllocator quadBuffAllocatorMasked = new BufferAllocator(2097152);
+    private final BufferAllocator lineBuffAllocator = new BufferAllocator(2097152);
+
+    private BufferBuilder quadBufferBuilderNonMasked;
+    private BufferBuilder quadBufferBuilderMasked;
+    private BufferBuilder lineBufferBuilder;
 
     private boolean isFreshBuffers = true;
     private VertexBuffer quadBufferNonMaskedUploaded = new VertexBuffer(VertexBuffer.Usage.DYNAMIC);
@@ -44,7 +52,7 @@ public class RenderingContext {
     private volatile double baseY;
     private volatile double baseZ;
 
-    {
+    public RenderingContext() {
         reset();
     }
 
@@ -84,9 +92,9 @@ public class RenderingContext {
 
     public void beginBatch() {
         lastBuildStartTime = System.nanoTime();
-        quadBufferBuilderMasked.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-        quadBufferBuilderNonMasked.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-        lineBufferBuilder.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
+        quadBufferBuilderMasked = new BufferBuilder(quadBuffAllocatorMasked, VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        quadBufferBuilderNonMasked = new BufferBuilder(quadBuffAllocatorNonMasked, VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        lineBufferBuilder = new BufferBuilder(lineBuffAllocator, VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
     }
 
     public void drawSolidBox(Box box, Color color, int alpha, boolean mask, boolean sameX, boolean sameY, boolean sameZ) {
@@ -105,51 +113,51 @@ public class RenderingContext {
         if (!sameX && !sameZ) {
             if (mask) quadMaskedCount++;
             else quadNonMaskedCount++;
-            bufferBuilder.vertex(minX, minY, minZ).color(red, green, blue, alpha).next();
-            bufferBuilder.vertex(maxX, minY, minZ).color(red, green, blue, alpha).next();
-            bufferBuilder.vertex(maxX, minY, maxZ).color(red, green, blue, alpha).next();
-            bufferBuilder.vertex(minX, minY, maxZ).color(red, green, blue, alpha).next();
+            bufferBuilder.vertex(minX, minY, minZ).color(red, green, blue, alpha);
+            bufferBuilder.vertex(maxX, minY, minZ).color(red, green, blue, alpha);
+            bufferBuilder.vertex(maxX, minY, maxZ).color(red, green, blue, alpha);
+            bufferBuilder.vertex(minX, minY, maxZ).color(red, green, blue, alpha);
             if (!sameY) {
                 if (mask) quadMaskedCount++;
                 else quadNonMaskedCount++;
-                bufferBuilder.vertex(minX, maxY, minZ).color(red, green, blue, alpha).next();
-                bufferBuilder.vertex(minX, maxY, maxZ).color(red, green, blue, alpha).next();
-                bufferBuilder.vertex(maxX, maxY, maxZ).color(red, green, blue, alpha).next();
-                bufferBuilder.vertex(maxX, maxY, minZ).color(red, green, blue, alpha).next();
+                bufferBuilder.vertex(minX, maxY, minZ).color(red, green, blue, alpha);
+                bufferBuilder.vertex(minX, maxY, maxZ).color(red, green, blue, alpha);
+                bufferBuilder.vertex(maxX, maxY, maxZ).color(red, green, blue, alpha);
+                bufferBuilder.vertex(maxX, maxY, minZ).color(red, green, blue, alpha);
             }
         }
 
         if (!sameX && !sameY) {
             if (mask) quadMaskedCount++;
             else quadNonMaskedCount++;
-            bufferBuilder.vertex(minX, minY, minZ).color(red, green, blue, alpha).next();
-            bufferBuilder.vertex(minX, maxY, minZ).color(red, green, blue, alpha).next();
-            bufferBuilder.vertex(maxX, maxY, minZ).color(red, green, blue, alpha).next();
-            bufferBuilder.vertex(maxX, minY, minZ).color(red, green, blue, alpha).next();
+            bufferBuilder.vertex(minX, minY, minZ).color(red, green, blue, alpha);
+            bufferBuilder.vertex(minX, maxY, minZ).color(red, green, blue, alpha);
+            bufferBuilder.vertex(maxX, maxY, minZ).color(red, green, blue, alpha);
+            bufferBuilder.vertex(maxX, minY, minZ).color(red, green, blue, alpha);
             if (!sameZ) {
                 if (mask) quadMaskedCount++;
                 else quadNonMaskedCount++;
-                bufferBuilder.vertex(minX, minY, maxZ).color(red, green, blue, alpha).next();
-                bufferBuilder.vertex(maxX, minY, maxZ).color(red, green, blue, alpha).next();
-                bufferBuilder.vertex(maxX, maxY, maxZ).color(red, green, blue, alpha).next();
-                bufferBuilder.vertex(minX, maxY, maxZ).color(red, green, blue, alpha).next();
+                bufferBuilder.vertex(minX, minY, maxZ).color(red, green, blue, alpha);
+                bufferBuilder.vertex(maxX, minY, maxZ).color(red, green, blue, alpha);
+                bufferBuilder.vertex(maxX, maxY, maxZ).color(red, green, blue, alpha);
+                bufferBuilder.vertex(minX, maxY, maxZ).color(red, green, blue, alpha);
             }
         }
 
         if (!sameY && !sameZ) {
             if (mask) quadMaskedCount++;
             else quadNonMaskedCount++;
-            bufferBuilder.vertex(minX, minY, minZ).color(red, green, blue, alpha).next();
-            bufferBuilder.vertex(minX, minY, maxZ).color(red, green, blue, alpha).next();
-            bufferBuilder.vertex(minX, maxY, maxZ).color(red, green, blue, alpha).next();
-            bufferBuilder.vertex(minX, maxY, minZ).color(red, green, blue, alpha).next();
+            bufferBuilder.vertex(minX, minY, minZ).color(red, green, blue, alpha);
+            bufferBuilder.vertex(minX, minY, maxZ).color(red, green, blue, alpha);
+            bufferBuilder.vertex(minX, maxY, maxZ).color(red, green, blue, alpha);
+            bufferBuilder.vertex(minX, maxY, minZ).color(red, green, blue, alpha);
             if (!sameX) {
                 if (mask) quadMaskedCount++;
                 else quadNonMaskedCount++;
-                bufferBuilder.vertex(maxX, minY, minZ).color(red, green, blue, alpha).next();
-                bufferBuilder.vertex(maxX, maxY, minZ).color(red, green, blue, alpha).next();
-                bufferBuilder.vertex(maxX, maxY, maxZ).color(red, green, blue, alpha).next();
-                bufferBuilder.vertex(maxX, minY, maxZ).color(red, green, blue, alpha).next();
+                bufferBuilder.vertex(maxX, minY, minZ).color(red, green, blue, alpha);
+                bufferBuilder.vertex(maxX, maxY, minZ).color(red, green, blue, alpha);
+                bufferBuilder.vertex(maxX, maxY, maxZ).color(red, green, blue, alpha);
+                bufferBuilder.vertex(maxX, minY, maxZ).color(red, green, blue, alpha);
             }
         }
     }
@@ -163,22 +171,22 @@ public class RenderingContext {
         final float x1 = (float) (point1.getX() - baseX);
         final float y1 = (float) (point1.getY() - baseY);
         final float z1 = (float) (point1.getZ() - baseZ);
-        bufferBuilder.vertex(x1, y1, z1).color(color.getRed(), color.getGreen(), color.getBlue(), alpha).next();
+        bufferBuilder.vertex(x1, y1, z1).color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
 
         final float x2 = (float) (point2.getX() - baseX);
         final float y2 = (float) (point2.getY() - baseY);
         final float z2 = (float) (point2.getZ() - baseZ);
-        bufferBuilder.vertex(x2, y2, z2).color(color.getRed(), color.getGreen(), color.getBlue(), alpha).next();
+        bufferBuilder.vertex(x2, y2, z2).color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
 
         final float x3 = (float) (point3.getX() - baseX);
         final float y3 = (float) (point3.getY() - baseY);
         final float z3 = (float) (point3.getZ() - baseZ);
-        bufferBuilder.vertex(x3, y3, z3).color(color.getRed(), color.getGreen(), color.getBlue(), alpha).next();
+        bufferBuilder.vertex(x3, y3, z3).color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
 
         final float x4 = (float) (point4.getX() - baseX);
         final float y4 = (float) (point4.getY() - baseY);
         final float z4 = (float) (point4.getZ() - baseZ);
-        bufferBuilder.vertex(x4, y4, z4).color(color.getRed(), color.getGreen(), color.getBlue(), alpha).next();
+        bufferBuilder.vertex(x4, y4, z4).color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
     }
 
     public void drawLine(Point startPoint, Point endPoint, Color color, int alpha) {
@@ -189,13 +197,13 @@ public class RenderingContext {
                         (float) (startPoint.getY() - baseY),
                         (float) (startPoint.getZ() - baseZ))
                 .color(color.getRed(), color.getGreen(), color.getBlue(), alpha)
-                .next();
+        ;
         lineBufferBuilder
                 .vertex((float) (endPoint.getX() - baseX),
                         (float) (endPoint.getY() - baseY),
                         (float) (endPoint.getZ() - baseZ))
                 .color(color.getRed(), color.getGreen(), color.getBlue(), alpha)
-                .next();
+        ;
     }
 
     public void endBatch() {
@@ -203,43 +211,38 @@ public class RenderingContext {
 
         CompletableFuture<?>[] futures = new CompletableFuture[3];
 
-        final BufferBuilder.BuiltBuffer quadBufferMasked = this.quadBufferBuilderMasked.end();
-        quadBufferMaskedUploadedEmpty = quadBufferMasked.isEmpty();
         final Executor executor = command -> {
             if (RenderSystem.isOnRenderThread()) command.run();
             else RenderSystem.recordRenderCall(command::run);
         };
+
+        final BuiltBuffer quadBufferMasked = this.quadBufferBuilderMasked.endNullable();
+        quadBufferMaskedUploadedEmpty = quadBufferMasked == null;
         futures[0] = CompletableFuture.runAsync(() -> {
             if (!quadBufferMaskedUploadedEmpty) {
                 quadBufferMaskedUploaded.bind();
                 quadBufferMaskedUploaded.upload(quadBufferMasked);
                 VertexBuffer.unbind();
-            } else {
-                quadBufferMasked.release();
             }
         }, executor);
 
-        final BufferBuilder.BuiltBuffer quadBufferNonMasked = this.quadBufferBuilderNonMasked.end();
-        quadBufferNonMaskedUploadedEmpty = quadBufferNonMasked.isEmpty();
+        final BuiltBuffer quadBufferNonMasked = this.quadBufferBuilderNonMasked.endNullable();
+        quadBufferNonMaskedUploadedEmpty = quadBufferNonMasked == null;
         futures[1] = CompletableFuture.runAsync(() -> {
             if (!quadBufferNonMaskedUploadedEmpty) {
                 quadBufferNonMaskedUploaded.bind();
                 quadBufferNonMaskedUploaded.upload(quadBufferNonMasked);
                 VertexBuffer.unbind();
-            } else {
-                quadBufferNonMasked.release();
             }
         }, executor);
 
-        final BufferBuilder.BuiltBuffer lineBuffer = this.lineBufferBuilder.end();
-        lineBufferUploadedEmpty = lineBuffer.isEmpty();
+        final BuiltBuffer lineBuffer = this.lineBufferBuilder.endNullable();
+        lineBufferUploadedEmpty = lineBuffer == null;
         futures[2] = CompletableFuture.runAsync(() -> {
             if (!lineBufferUploadedEmpty) {
                 lineBufferUploaded.bind();
                 lineBufferUploaded.upload(lineBuffer);
                 VertexBuffer.unbind();
-            } else {
-                lineBuffer.release();
             }
         }, executor);
 

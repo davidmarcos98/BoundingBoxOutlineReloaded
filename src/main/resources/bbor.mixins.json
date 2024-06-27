@@ -9,10 +9,9 @@
     "access.IBiome",
     "access.IServerCommonNetworkHandler",
     "access.IStructureStart",
-    "network.common.c2s.MixinCCustomPayloadPacket",
+    "network.common.MixinCustomPayload$1",
     "server.MixinDynamicRegistryManager",
     "server.MixinMinecraftServer",
-    "server.MixinThreadedAnvilChunkStorage",
     "server.management.MixinPlayerList",
     "server.network.MixinServerCommonNetworkHandler",
     "world.chunk.MixinPalettedContainer"
@@ -44,7 +43,6 @@
     "network.common.s2c.MixinSChatPacket",
     "network.common.s2c.MixinSChunkDataPacket",
     "network.common.s2c.MixinSCommandListPacket",
-    "network.common.s2c.MixinSCustomPayloadPlayPacket",
     "network.common.s2c.MixinSSpawnPositionPacket"
   ],
   "server": [

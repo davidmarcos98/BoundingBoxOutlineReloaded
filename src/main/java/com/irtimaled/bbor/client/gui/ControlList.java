@@ -8,12 +8,15 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.TabButtonWidget;
 import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.BufferRenderer;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +37,6 @@ public class ControlList implements IControlSet {
     protected int contentHeight = PADDING;
     private double amountScrolled;
     private boolean clickedScrollbar;
-    private boolean transparentBackground;
     private IControl focused;
     private boolean isDragging;
 
@@ -177,13 +179,14 @@ public class ControlList implements IControlSet {
 
         int listTop = this.top + PADDING - (int) this.amountScrolled;
 
+        Screen.renderBackgroundTexture(ctx, Screen.MENU_BACKGROUND_TEXTURE, 0, top, 0.0F, 0.0F, width, height);
         drawEntries(ctx, mouseX, mouseY, listTop);
 
         RenderHelper.enableDepthTest();
         RenderHelper.depthFuncAlways();
 
-        this.overlayBackground(0, this.top);
-        this.overlayBackground(this.bottom, this.height);
+        this.overlayBackground(ctx, 0, this.top, Screen.HEADER_SEPARATOR_TEXTURE);
+        this.overlayBackground(ctx, this.bottom, this.height, Screen.FOOTER_SEPARATOR_TEXTURE);
         RenderHelper.depthFuncLessEqual();
         RenderHelper.disableDepthTest();
         RenderHelper.enableBlend();
@@ -202,19 +205,6 @@ public class ControlList implements IControlSet {
         RenderHelper.disableBlend();
     }
 
-    private void drawListBackground(MatrixStack matrixStack) {
-        MinecraftClient.getInstance().getTextureManager().bindTexture(Screen.OPTIONS_BACKGROUND_TEXTURE);
-        Renderer.startTextured()
-                .setMatrixStack(matrixStack)
-                .setColor(32, 32, 32)
-                .setAlpha(255)
-                .addPoint(0, this.bottom, 0.0D, (float) 0 / 32.0F, (float) (this.bottom + (int) this.amountScrolled) / 32.0F)
-                .addPoint(this.width, this.bottom, 0.0D, (float) this.width / 32.0F, (float) (this.bottom + (int) this.amountScrolled) / 32.0F)
-                .addPoint(this.width, this.top, 0.0D, (float) this.width / 32.0F, (float) (this.top + (int) this.amountScrolled) / 32.0F)
-                .addPoint(0, this.top, 0.0D, (float) 0 / 32.0F, (float) (this.top + (int) this.amountScrolled) / 32.0F)
-                .render();
-    }
-
     private void drawEntries(DrawContext ctx, int mouseX, int mouseY, int top) {
         for (ControlListEntry entry : this.entries) {
             if (!entry.isVisible()) continue;
@@ -224,7 +214,7 @@ public class ControlList implements IControlSet {
 
             int height = entry.getControlHeight();
             int bottom = top + height;
-            if(top <= this.bottom && bottom >= this.top) {
+            if (bottom >= this.top && top <= this.bottom) {
                 drawEntry(ctx, mouseX, mouseY, top, entry, height);
             } else {
                 entry.update();
@@ -237,34 +227,10 @@ public class ControlList implements IControlSet {
         entry.render(ctx, mouseX, mouseY);
     }
 
-    private void overlayBackground(int top, int bottom) {
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.getBuffer();
-        RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
-        RenderSystem.setShaderTexture(0, Screen.OPTIONS_BACKGROUND_TEXTURE);
-
-        bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
-        bufferBuilder
-                .vertex(0, bottom, -100.0D)
-                .texture(0.0F, (float) bottom / 32.0F)
-                .color(64, 64, 64, 255)
-                .next();
-        bufferBuilder
-                .vertex(this.width, bottom, -100.0D)
-                .texture((float) this.width / 32.0F, (float) bottom / 32.0F)
-                .color(64, 64, 64, 255)
-                .next();
-        bufferBuilder
-                .vertex(this.width, top, -100.0D)
-                .texture((float) this.width / 32.0F, (float) top / 32.0F)
-                .color(64, 64, 64, 255)
-                .next();
-        bufferBuilder
-                .vertex(0, top, -100.0D)
-                .texture(0.0f, (float) top / 32.0F)
-                .color(64, 64, 64, 255)
-                .next();
-        tessellator.draw();
+    private void overlayBackground(DrawContext context, int top, int bottom, Identifier texture) {
+        RenderSystem.enableBlend();
+        context.drawTexture(texture, 0, top, 0.0F, 0.0F, 0, bottom, 32, 2);
+        RenderSystem.disableBlend();
     }
 
     private void drawScrollBar(int maxScroll) {
@@ -275,28 +241,26 @@ public class ControlList implements IControlSet {
         }
 
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.getBuffer();
+        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
         RenderHelper.disableTexture();
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
 
-        bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        bufferBuilder.vertex(this.scrollBarLeft, this.bottom, 0.0F).color(0, 0, 0, 255);
+        bufferBuilder.vertex(this.width, this.bottom, 0.0F).color(0, 0, 0, 255);
+        bufferBuilder.vertex(this.width, this.top, 0.0F).color(0, 0, 0, 255);
+        bufferBuilder.vertex(this.scrollBarLeft, this.top, 0.0F).color(0, 0, 0, 255);
 
-        bufferBuilder.vertex(this.scrollBarLeft, this.bottom, 0.0D).color(0, 0, 0, 255).next();
-        bufferBuilder.vertex(this.width, this.bottom, 0.0D).color(0, 0, 0, 255).next();
-        bufferBuilder.vertex(this.width, this.top, 0.0D).color(0, 0, 0, 255).next();
-        bufferBuilder.vertex(this.scrollBarLeft, this.top, 0.0D).color(0, 0, 0, 255).next();
+        bufferBuilder.vertex(this.scrollBarLeft, scrollBarTop + scrollBarHeight, 0.0F).color(128, 128, 128, 255);
+        bufferBuilder.vertex(this.width, scrollBarTop + scrollBarHeight, 0.0F).color(128, 128, 128, 255);
+        bufferBuilder.vertex(this.width, scrollBarTop, 0.0F).color(128, 128, 128, 255);
+        bufferBuilder.vertex(this.scrollBarLeft, scrollBarTop, 0.0F).color(128, 128, 128, 255);
 
-        bufferBuilder.vertex(this.scrollBarLeft, scrollBarTop + scrollBarHeight, 0.0D).color(128, 128, 128, 255).next();
-        bufferBuilder.vertex(this.width, scrollBarTop + scrollBarHeight, 0.0D).color(128, 128, 128, 255).next();
-        bufferBuilder.vertex(this.width, scrollBarTop, 0.0D).color(128, 128, 128, 255).next();
-        bufferBuilder.vertex(this.scrollBarLeft, scrollBarTop, 0.0D).color(128, 128, 128, 255).next();
+        bufferBuilder.vertex(this.scrollBarLeft, scrollBarTop + scrollBarHeight - 1, 0.0F).color(192, 192, 192, 255);
+        bufferBuilder.vertex(this.width - 1, scrollBarTop + scrollBarHeight - 1, 0.0F).color(192, 192, 192, 255);
+        bufferBuilder.vertex(this.width - 1, scrollBarTop, 0.0F).color(192, 192, 192, 255);
+        bufferBuilder.vertex(this.scrollBarLeft, scrollBarTop, 0.0F).color(192, 192, 192, 255);
 
-        bufferBuilder.vertex(this.scrollBarLeft, scrollBarTop + scrollBarHeight - 1, 0.0D).color(192, 192, 192, 255).next();
-        bufferBuilder.vertex(this.width - 1, scrollBarTop + scrollBarHeight - 1, 0.0D).color(192, 192, 192, 255).next();
-        bufferBuilder.vertex(this.width - 1, scrollBarTop, 0.0D).color(192, 192, 192, 255).next();
-        bufferBuilder.vertex(this.scrollBarLeft, scrollBarTop, 0.0D).color(192, 192, 192, 255).next();
-
-        tessellator.draw();
+        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
         RenderHelper.enableTexture();
     }
 
@@ -307,21 +271,19 @@ public class ControlList implements IControlSet {
         RenderHelper.disableTexture();
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.getBuffer();
+        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
-        bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        bufferBuilder.vertex(0, this.top + 4, 0.0F).color(0, 0, 0, 0);
+        bufferBuilder.vertex(this.width, this.top + 4, 0.0F).color(0, 0, 0, 0);
+        bufferBuilder.vertex(this.width, this.top, 0.0F).color(0, 0, 0, 255);
+        bufferBuilder.vertex(0, this.top, 0.0F).color(0, 0, 0, 255);
 
-        bufferBuilder.vertex(0, this.top + 4, 0.0D).color(0, 0, 0, 0).next();
-        bufferBuilder.vertex(this.width, this.top + 4, 0.0D).color(0, 0, 0, 0).next();
-        bufferBuilder.vertex(this.width, this.top, 0.0D).color(0, 0, 0, 255).next();
-        bufferBuilder.vertex(0, this.top, 0.0D).color(0, 0, 0, 255).next();
+        bufferBuilder.vertex(this.width, this.bottom - 4, 0.0F).color(0, 0, 0, 0);
+        bufferBuilder.vertex(0, this.bottom - 4, 0.0F).color(0, 0, 0, 0);
+        bufferBuilder.vertex(0, this.bottom, 0.0F).color(0, 0, 0, 255);
+        bufferBuilder.vertex(this.width, this.bottom, 0.0F).color(0, 0, 0, 255);
 
-        bufferBuilder.vertex(this.width, this.bottom - 4, 0.0D).color(0, 0, 0, 0).next();
-        bufferBuilder.vertex(0, this.bottom - 4, 0.0D).color(0, 0, 0, 0).next();
-        bufferBuilder.vertex(0, this.bottom, 0.0D).color(0, 0, 0, 255).next();
-        bufferBuilder.vertex(this.width, this.bottom, 0.0D).color(0, 0, 0, 255).next();
-
-        tessellator.draw();
+        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
         RenderHelper.enableTexture();
         RenderSystem.disableBlend();
     }
@@ -334,10 +296,6 @@ public class ControlList implements IControlSet {
     ControlList section(String title, int columnCount, CreateControl... createControls) {
         this.add(new ControlListSection(title, columnCount, createControls));
         return this;
-    }
-
-    void setTransparentBackground() {
-        this.transparentBackground = true;
     }
 
     @Override

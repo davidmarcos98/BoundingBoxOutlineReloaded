@@ -41,12 +41,6 @@ public class MixinClientPlayNetHandler {
         EventBus.publish(new GameJoin());
     }
 
-    @Inject(method = "warnOnUnknownPayload", at = @At(value = "CONSTANT", args = "stringValue=Unknown custom packet payload: {}"), cancellable = true)
-    private void suppressWarning(CustomPayload payload, CallbackInfo ci) {
-        if (payload.id().equals(ServuxStructurePackets.CHANNEL)) ci.cancel();
-    }
-
-
     @Inject(method = "sendChatCommand", at = @At("HEAD"), cancellable = true)
     private void interceptSendCommand(String command, CallbackInfo ci) {
         if (ClientInterop.interceptCommandUsage(command)) {
