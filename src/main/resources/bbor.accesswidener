@@ -4,3 +4,4 @@ accessible    class    net/minecraft/client/world/ClientChunkManager$ClientChunk
 
 extendable    class    net/minecraft/structure/StructureStart
 extendable    class    net/minecraft/world/biome/Biome
+accessible field net/minecraft/client/gui/screen/Screen INWORLD_MENU_BACKGROUND_TEXTURE Lnet/minecraft/util/Identifier;

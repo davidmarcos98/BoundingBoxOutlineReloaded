@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ControlList implements IControlSet {
+    private static final Identifier OPTIONS_BACKGROUND_TEXTURE = Identifier.tryParse("bbor:textures/gui/options_background.png");
+
     public static final int CONTROLS_WIDTH = 310;
     protected static final int PADDING = 8;
 
@@ -179,14 +181,14 @@ public class ControlList implements IControlSet {
 
         int listTop = this.top + PADDING - (int) this.amountScrolled;
 
-        Screen.renderBackgroundTexture(ctx, Screen.MENU_BACKGROUND_TEXTURE, 0, top, 0.0F, 0.0F, width, height);
+        Screen.renderBackgroundTexture(ctx, MinecraftClient.getInstance().world != null ? Screen.INWORLD_MENU_BACKGROUND_TEXTURE : Screen.MENU_BACKGROUND_TEXTURE, 0, top, 0.0F, 0.0F, width, height);
         drawEntries(ctx, mouseX, mouseY, listTop);
 
         RenderHelper.enableDepthTest();
         RenderHelper.depthFuncAlways();
 
-        this.overlayBackground(ctx, 0, this.top, Screen.HEADER_SEPARATOR_TEXTURE);
-        this.overlayBackground(ctx, this.bottom, this.height, Screen.FOOTER_SEPARATOR_TEXTURE);
+        this.overlayBackground(0, this.top);
+        this.overlayBackground(this.bottom, this.height);
         RenderHelper.depthFuncLessEqual();
         RenderHelper.disableDepthTest();
         RenderHelper.enableBlend();
@@ -227,10 +229,29 @@ public class ControlList implements IControlSet {
         entry.render(ctx, mouseX, mouseY);
     }
 
-    private void overlayBackground(DrawContext context, int top, int bottom, Identifier texture) {
-        RenderSystem.enableBlend();
-        context.drawTexture(texture, 0, top, 0.0F, 0.0F, 0, bottom, 32, 2);
-        RenderSystem.disableBlend();
+    private void overlayBackground(int top, int bottom) {
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
+        RenderSystem.setShaderTexture(0, OPTIONS_BACKGROUND_TEXTURE);
+
+        bufferBuilder
+                .vertex(0, bottom, -100.0F)
+                .texture(0.0F, (float) bottom / 32.0F)
+                .color(64, 64, 64, 255);
+        bufferBuilder
+                .vertex(this.width, bottom, -100.0F)
+                .texture((float) this.width / 32.0F, (float) bottom / 32.0F)
+                .color(64, 64, 64, 255);
+        bufferBuilder
+                .vertex(this.width, top, -100.0F)
+                .texture((float) this.width / 32.0F, (float) top / 32.0F)
+                .color(64, 64, 64, 255);
+        bufferBuilder
+                .vertex(0, top, -100.0F)
+                .texture(0.0f, (float) top / 32.0F)
+                .color(64, 64, 64, 255);
+        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
     }
 
     private void drawScrollBar(int maxScroll) {

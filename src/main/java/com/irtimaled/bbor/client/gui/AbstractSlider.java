@@ -4,8 +4,14 @@ import com.irtimaled.bbor.common.MathHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.sound.SoundManager;
+import net.minecraft.util.Identifier;
 
 abstract class AbstractSlider extends AbstractControl {
+    private static final Identifier TEXTURE = Identifier.ofVanilla("widget/slider");
+    private static final Identifier HIGHLIGHTED_TEXTURE = Identifier.ofVanilla("widget/slider_highlighted");
+    private static final Identifier HANDLE_TEXTURE = Identifier.ofVanilla("widget/slider_handle");
+    private static final Identifier HANDLE_HIGHLIGHTED_TEXTURE = Identifier.ofVanilla("widget/slider_handle_highlighted");
+
     private final int optionCount;
     private final int total;
     int position = 0;
@@ -16,12 +22,18 @@ abstract class AbstractSlider extends AbstractControl {
         total = this.width - 8;
     }
 
+    private Identifier getTexture() {
+        return this.isFocused() ? HIGHLIGHTED_TEXTURE : TEXTURE;
+    }
+
+    private Identifier getHandleTexture() {
+        return !this.hovered ? HANDLE_TEXTURE : HANDLE_HIGHLIGHTED_TEXTURE;
+    }
+
     @Override
     protected void renderBackground(DrawContext ctx) {
-//        this.minecraft.getTextureManager().bindTexture(WIDGETS_TEXTURE);
-        int hoverState = this.isSelected() ? 1 : 0;
-        // ctx.drawTexture(WIDGETS_TEXTURE, this.getX() + (int) getProgressPercentage(), this.getY(), 0, 46 + hoverState * 20, 4, this.height); FIX
-        // ctx.drawTexture(WIDGETS_TEXTURE, this.getX() + (int) getProgressPercentage() + 4, this.getY(), 196, 46 + hoverState * 20, 4, 20);
+        ctx.drawGuiTexture(this.getTexture(), this.getX(), this.getY(), this.getWidth(), this.getHeight());
+        ctx.drawGuiTexture(this.getHandleTexture(), this.getX() + (int) getProgressPercentage(), this.getY(), 8, this.getHeight());
     }
 
     private double getProgressPercentage() {
