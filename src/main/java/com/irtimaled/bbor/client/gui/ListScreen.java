@@ -24,10 +24,6 @@ public abstract class ListScreen extends Screen {
         this.lastScreen = lastScreen;
     }
 
-    ListScreen() {
-        this(null);
-    }
-
     protected void onDoneClicked() {
         ClientInterop.displayScreen(lastScreen);
     }
@@ -67,11 +63,6 @@ public abstract class ListScreen extends Screen {
         int left = this.width - this.textRenderer.getWidth(version) - 2;
         int top = this.height - 10;
         ctx.drawTextWithShadow(this.textRenderer, version, left, top, -10658467);
-    }
-
-    @Override
-    public void tick() {
-        // this.searchField.tick(); TODO fix
     }
 
     @Override

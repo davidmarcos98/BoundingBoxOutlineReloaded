@@ -30,7 +30,7 @@ public class CommonProxy {
     private final Map<Integer, Set<AbstractBoundingBox>> playerBoundingBoxesCache = new HashMap<>();
     private final Map<DimensionId, StructureProcessor> structureProcessors = new HashMap<>();
     private final Map<DimensionId, BoundingBoxCache> dimensionCache = new ConcurrentHashMap<>();
-    private Long seed = null;
+    protected Long seed = null;
     private Integer spawnX = null;
     private Integer spawnZ = null;
 

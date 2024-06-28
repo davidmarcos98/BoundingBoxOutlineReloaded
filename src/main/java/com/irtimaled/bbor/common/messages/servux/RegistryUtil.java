@@ -1,5 +1,6 @@
 package com.irtimaled.bbor.common.messages.servux;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.GeneratorOptionsHolder;
 import net.minecraft.registry.CombinedDynamicRegistries;
 import net.minecraft.registry.DynamicRegistryManager;
@@ -21,16 +22,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class RegistryUtil {
-    static final DynamicRegistryManager.Immutable REGISTRY_MANAGER = null; // TODO fix
+    static final DynamicRegistryManager.Immutable REGISTRY_MANAGER;
 
     static {
-        /* TODO fix
         final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
         try {
-            ResourcePackManager resourcePackManager = new ResourcePackManager(new VanillaDataPackProvider());
+            ResourcePackManager resourcePackManager = VanillaDataPackProvider.createClientManager();
             SaveLoading.DataPacks dataPacks = new SaveLoading.DataPacks(resourcePackManager, DataConfiguration.SAFE_MODE, false, true);
             SaveLoading.ServerConfig serverConfig = new SaveLoading.ServerConfig(dataPacks, CommandManager.RegistrationEnvironment.INTEGRATED, 2);
+            // DO NOT CONVERT THIS TO LAMBDA DUE TO FREEZES
             CompletableFuture<GeneratorOptionsHolder> completableFuture = SaveLoading.load(
                     serverConfig,
                     context -> new SaveLoading.LoadContext<>(
@@ -54,7 +55,6 @@ public class RegistryUtil {
         } finally {
             executorService.shutdown();
         }
-         */
     }
 
     record WorldCreationSettings(WorldGenSettings worldGenSettings, DataConfiguration dataConfiguration) {

@@ -21,7 +21,6 @@ import com.irtimaled.bbor.common.interop.CommonInterop;
 import com.irtimaled.bbor.common.messages.servux.ServuxStructurePackets;
 import com.irtimaled.bbor.common.models.DimensionId;
 import com.irtimaled.bbor.mixin.access.IKeyBinding;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 
 import java.util.Map;
@@ -56,7 +55,7 @@ public class ClientProxy extends CommonProxy {
         EventBus.subscribe(UpdateWorldSpawnReceived.class, this::onUpdateWorldSpawnReceived);
         EventBus.subscribe(SaveLoaded.class, e -> clear());
         EventBus.subscribe(GameJoin.class, e -> {
-            final ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
+            final ClientPlayNetworkHandler networkHandler = e.handler();
             if (networkHandler == null) {
                 System.err.println("network handler is null");
                 return;
@@ -65,6 +64,7 @@ public class ClientProxy extends CommonProxy {
             if (!ConfigManager.keepCacheBetweenSessions.get()) {
                 clear();
             }
+            SlimeChunkProvider.setSeed(this.seed);
             networkHandler.sendPacket(ServuxStructurePackets.subscribe().build());
         });
 

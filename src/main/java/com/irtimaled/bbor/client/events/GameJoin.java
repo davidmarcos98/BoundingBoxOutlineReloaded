@@ -1,4 +1,6 @@
 package com.irtimaled.bbor.client.events;
 
-public class GameJoin {
+import net.minecraft.client.network.ClientPlayNetworkHandler;
+
+public record GameJoin(ClientPlayNetworkHandler handler) {
 }

@@ -11,9 +11,7 @@ import com.irtimaled.bbor.common.messages.StructureListSync;
 import com.irtimaled.bbor.common.messages.SubscribeToServer;
 import com.irtimaled.bbor.common.messages.protocols.PacketSplitter;
 import com.irtimaled.bbor.common.messages.servux.ServuxStructurePackets;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.network.NetworkThreadUtils;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.CustomPayload;
@@ -36,9 +34,9 @@ public class MixinClientPlayNetHandler {
 //        CommonInterop.loadWorldStructures(this.world);
 //    }
 
-    @Inject(method = "onGameJoin", at = @At("HEAD"))
+    @Inject(method = "onGameJoin", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;<init>(Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/network/ClientPlayNetworkHandler;)V"))
     private void onGameJoin(CallbackInfo ci) {
-        EventBus.publish(new GameJoin());
+        EventBus.publish(new GameJoin((ClientPlayNetworkHandler) (Object) this));
     }
 
     @Inject(method = "sendChatCommand", at = @At("HEAD"), cancellable = true)
@@ -72,11 +70,13 @@ public class MixinClientPlayNetHandler {
                     data = PacketSplitter.receive((ClientPlayPacketListener) this, payload);
                     if (data != null) {
                         PayloadReader reader = new PayloadReader(data);
-                        // ServuxStructurePackets.handleEvent(reader);  TODO fix
+                        ServuxStructurePackets.handleEvent(reader);
                     }
                 } finally {
-                    if (data != null)
+                    if (data != null) {
                         data.release();
+                    }
+                    // ci.cancel();
                 }
             }
         }
