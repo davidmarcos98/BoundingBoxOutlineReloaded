@@ -64,7 +64,9 @@ public class ClientProxy extends CommonProxy {
             if (!ConfigManager.keepCacheBetweenSessions.get()) {
                 clear();
             }
-            SlimeChunkProvider.setSeed(this.seed);
+            if (this.seed != null) {
+                SlimeChunkProvider.setSeed(this.seed);
+            }
             networkHandler.sendPacket(ServuxStructurePackets.subscribe().build());
         });
 
